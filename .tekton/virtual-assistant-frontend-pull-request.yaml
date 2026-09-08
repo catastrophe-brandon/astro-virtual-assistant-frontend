@@ -105,11 +105,8 @@ spec:
   taskRunTemplate:
     serviceAccountName: build-pipeline-virtual-assistant-frontend
     podTemplate:
-      # Override /etc/hosts to redirect stage.foo.redhat.com to localhost
+      # Resolve the dev proxy hostname to IPv4 loopback.
       hostAliases:
-        - ip: "::1"
-          hostnames:
-            - "stage.foo.redhat.com"
         - ip: "127.0.0.1"
           hostnames:
             - "stage.foo.redhat.com"
