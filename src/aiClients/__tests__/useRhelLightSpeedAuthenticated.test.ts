@@ -65,8 +65,18 @@ describe('useRhelLightSpeedAuthenticated', () => {
     },
   };
 
+  beforeAll(() => {
+    jest.resetModules();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.useRealTimers();
   });
 
   it('should handle user with RHEL entitlement', async () => {

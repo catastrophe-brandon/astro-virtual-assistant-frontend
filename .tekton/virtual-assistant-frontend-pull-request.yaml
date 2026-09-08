@@ -43,7 +43,8 @@ spec:
     value: |
       #!/bin/bash
       set -ex
-      npm run test
+      # Run suites serially to limit peak memory usage in CI.
+      npm run test -- --runInBand
       echo "Exit code: $?"
      
 

@@ -74,9 +74,19 @@ describe('useArhAuthenticated', () => {
     },
   };
 
+  beforeAll(() => {
+    jest.resetModules();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers(); // Enable fake timers to control time-related functions
     mockChrome.getEnvironment.mockReturnValue('stage');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.useRealTimers(); // Reset to real timers to ensure no fake timers linger
   });
 
   it('should handle successful authentication', async () => {
@@ -194,6 +204,10 @@ describe('useArhClient', () => {
     checkARHAuth.mockResolvedValue(true);
     // Default: all flags enabled
     mockUseFlag.mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('sets isPreview to false when arh-default flag is ON', async () => {
