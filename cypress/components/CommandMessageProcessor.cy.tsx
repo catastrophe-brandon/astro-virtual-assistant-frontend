@@ -181,9 +181,8 @@ describe('CommandMessageProcessors that call APIs', () => {
     };
     cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-    cy.wait('@2FAApiSuccess').then(() => {
-      expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa', ['true']);
-    });
+    cy.wait('@2FAApiSuccess');
+    cy.wrap(options.addBanner).should('have.been.calledWith', 'toggle_org_2fa', ['true']);
   });
 
   it('should handle MANAGE_ORG_2FA command with failure', () => {
@@ -200,9 +199,8 @@ describe('CommandMessageProcessors that call APIs', () => {
     };
     cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-    cy.wait('@2FAApiFailure').then(() => {
-      expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa_failed', ['false']);
-    });
+    cy.wait('@2FAApiFailure');
+    cy.wrap(options.addBanner).should('have.been.calledWith', 'toggle_org_2fa_failed', ['false']);
   });
 
   it('should handle CREATE_SERVICE_ACCOUNT command successfully', () => {
@@ -220,14 +218,13 @@ describe('CommandMessageProcessors that call APIs', () => {
     };
     cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-    cy.wait('@serviceAccountAPISuccess').then(() => {
-      expect(options.addBanner).to.have.been.calledWith('create_service_account', [
-        'test-name',
-        'test description please',
-        '12345',
-        'secret',
-      ]);
-    })
+    cy.wait('@serviceAccountAPISuccess');
+    cy.wrap(options.addBanner).should('have.been.calledWith', 'create_service_account', [
+      'test-name',
+      'test description please',
+      '12345',
+      'secret',
+    ]);
   });
 
   it('should handle CREATE_SERVICE_ACCOUNT command with failure', () => {
