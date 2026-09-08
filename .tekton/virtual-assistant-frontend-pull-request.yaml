@@ -56,14 +56,22 @@ spec:
 
       # Wait for connectivity through the dev proxy to the console root.
       echo "Waiting for dev proxy connectivity..."
-      for i in {1..120}; do
-        if curl -k -s https://stage.foo.redhat.com:1337/ > /dev/null 2>&1; then
-          echo "Dev proxy connectivity established!"
-          break
-        fi
-        echo "Attempt $i/120: Dev proxy not reachable yet..."
-        sleep 1
-      done
+      if ! timeout 120s bash -c '
+        until curl -kfsS --connect-timeout 5 --max-time 10 \
+          --output /dev/null https://stage.foo.redhat.com:1337/; do
+          echo "Dev proxy not ready yet; retrying..."
+          sleep 1
+        done
+      '; then
+        echo "ERROR: Dev proxy readiness failed within the 120-second limit; skipping Playwright." >&2
+        echo "Hostname resolution for stage.foo.redhat.com:"
+        getent hosts stage.foo.redhat.com || true
+        echo "Verbose dev proxy connection diagnostics:"
+        curl -vk --connect-timeout 5 --max-time 10 \
+          --output /dev/null https://stage.foo.redhat.com:1337/ || true
+        exit 1
+      fi
+      echo "Dev proxy connectivity established!"
 
       npx playwright test
 
