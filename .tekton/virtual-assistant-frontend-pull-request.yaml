@@ -43,7 +43,7 @@ spec:
     value: |
       #!/bin/bash
       set -ex
-      # Run suites serially to limit peak memory usage in CI.
+      # --runInBand is required: parallel Jest workers use too much memory for CI.
       npm run test -- --runInBand
       echo "Exit code: $?"
      
@@ -54,14 +54,14 @@ spec:
       #!/bin/bash
       set -ex
 
-      # Wait for the application to be ready
-      echo "Waiting for application to be ready..."
+      # Wait for connectivity through the dev proxy to the console root.
+      echo "Waiting for dev proxy connectivity..."
       for i in {1..120}; do
-        if curl -k -s https://stage.foo.redhat.com:1337/apps/virtual-assistant/fed-mods.json > /dev/null 2>&1; then
-          echo "Application is ready!"
+        if curl -k -s https://stage.foo.redhat.com:1337/ > /dev/null 2>&1; then
+          echo "Dev proxy connectivity established!"
           break
         fi
-        echo "Attempt $i/120: Application not ready yet..."
+        echo "Attempt $i/120: Dev proxy not reachable yet..."
         sleep 1
       done
 
