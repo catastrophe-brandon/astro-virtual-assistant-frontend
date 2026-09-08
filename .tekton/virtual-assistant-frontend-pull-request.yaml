@@ -80,7 +80,7 @@ spec:
     value: |
       #!/bin/bash
       set -ex
-      /usr/bin/caddy run
+      /usr/bin/caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
 
   # E2E configuration
   - name: e2e-playwright-image
