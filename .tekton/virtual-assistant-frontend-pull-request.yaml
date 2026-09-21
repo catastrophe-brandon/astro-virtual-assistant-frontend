@@ -128,6 +128,19 @@ spec:
           limits:
             memory: "8Gi"
             cpu: "2000m"
+  taskRunSpecs:
+  - pipelineTaskName: run-unit-tests
+    podTemplate:
+      securityContext:
+        # Extract source as the same user that installs dependencies and runs tests.
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+  - pipelineTaskName: run-e2e-tests
+    podTemplate:
+      securityContext:
+        # Make the shared workspace and proxy config volume writable by test steps.
+        fsGroup: 1000
   workspaces:
   - name: workspace
     volumeClaimTemplate:
