@@ -103,9 +103,9 @@ spec:
   pipelineRef:
     params:
     - name: url
-      value: https://github.com/catastrophe-brandon/konflux-pipelines
+      value: https://github.com/catastrophe-brandon/konflux-pipelines.git
     - name: revision
-      value: btweed/platform-ui-e2e-security
+      value: f278bd0ca2c79c40f39ba3145a6904289d3f185a
     - name: pathInRepo
       value: pipelines/platform-ui/docker-build-run-all-tests-v2.yaml
     resolver: git
