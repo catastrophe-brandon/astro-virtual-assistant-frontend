@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import useStateManager from '../useStateManager';
 import { useLocation } from 'react-router-dom';
 import { VirtualAssistantStateSingleton } from '../../utils/VirtualAssistantStateSingleton';
+import { ARH_DEFAULT_FLAG, MAO_ONLY_FLAG } from '../flags';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -28,8 +29,9 @@ jest.mock('@scalprum/react-core', () => ({
   })),
 }));
 
-// Mock the useFlag hook for feature flags
-const mockUseFlag = jest.fn();
+// Mock the useFlag hook for feature flags — per-flag overrides via flagOverrides map
+const flagOverrides: Record<string, boolean> = {};
+const mockUseFlag = jest.fn((flag: string) => flagOverrides[flag] ?? false);
 jest.mock('@unleash/proxy-client-react', () => ({
   useFlag: (flag: string) => mockUseFlag(flag),
 }));
@@ -91,6 +93,9 @@ describe('useStateManager', () => {
     VirtualAssistantStateSingleton.setIsOpen(false);
     VirtualAssistantStateSingleton.setCurrentModel(undefined);
 
+    // Reset flag overrides
+    Object.keys(flagOverrides).forEach((key) => delete flagOverrides[key]);
+
     // Mock global fetch to prevent network calls and silence warnings
     global.fetch = jest.fn(() =>
       Promise.resolve({
@@ -113,15 +118,14 @@ describe('useStateManager', () => {
   };
 
   it('sets currentModel to the first available', async () => {
-    mockUseFlag.mockReturnValue(false);
     const { result } = renderHook(() => useStateManager(true));
     await actWait();
     expect(result.current.currentModel).toBe('Ask Red Hat');
   }, 10000);
 
   it('handles failed module by not blocking initialization', async () => {
-    // Enable chatbot so the hook proceeds to compute a model
-    mockUseFlag.mockReturnValue(true);
+    // Enable arh-default so ARH is first, but keep mao-only off
+    flagOverrides[ARH_DEFAULT_FLAG] = true;
 
     const { result } = renderHook(() => useStateManager(true));
 
@@ -132,7 +136,6 @@ describe('useStateManager', () => {
   });
 
   it('sets currentModel to matching route', async () => {
-    mockUseFlag.mockReturnValue(false);
     (useLocation as jest.Mock).mockReturnValue({ pathname: '/baz/foo' });
     const { result, rerender } = renderHook((isOpen: boolean) => useStateManager(isOpen));
     await actWait();
@@ -145,7 +148,6 @@ describe('useStateManager', () => {
   }, 10000);
 
   it('does not show non-authenticated models', async () => {
-    mockUseFlag.mockReturnValue(false);
     mockHookResults.length = 0;
     mockHookResults.push(
       {
@@ -192,7 +194,7 @@ describe('useStateManager', () => {
   }, 10000);
 
   it('registers ARH before VA when arh-default flag is ON', async () => {
-    mockUseFlag.mockReturnValue(true);
+    flagOverrides[ARH_DEFAULT_FLAG] = true;
 
     renderHook(() => useStateManager(true));
     await actWait();
@@ -206,8 +208,6 @@ describe('useStateManager', () => {
   });
 
   it('registers VA before ARH when arh-default flag is OFF', async () => {
-    mockUseFlag.mockReturnValue(false);
-
     renderHook(() => useStateManager(true));
     await actWait();
 
@@ -217,5 +217,51 @@ describe('useStateManager', () => {
     expect(arhIndex).toBeGreaterThanOrEqual(0);
     expect(vaIndex).toBeGreaterThanOrEqual(0);
     expect(vaIndex).toBeLessThan(arhIndex);
+  });
+
+  it('registers only MAS hook when mao-only flag is ON', async () => {
+    flagOverrides[MAO_ONLY_FLAG] = true;
+
+    renderHook(() => useStateManager(true));
+    await actWait();
+
+    const modules = mockAddHook.mock.calls.map(([arg]: [{ module: string }]) => arg.module);
+    expect(modules).toEqual(['./useMasChatbot']);
+  });
+
+  it('registers all hooks when mao-only flag is OFF', async () => {
+    renderHook(() => useStateManager(true));
+    await actWait();
+
+    const modules = mockAddHook.mock.calls.map(([arg]: [{ module: string }]) => arg.module);
+    expect(modules).toContain('./useVaChatbot');
+    expect(modules).toContain('./useArhChatbot');
+    expect(modules).toContain('./useRhelChatbot');
+    expect(modules).toContain('./useHccAiChatbot');
+    expect(modules).toContain('./useMasChatbot');
+    expect(modules).toHaveLength(5);
+  });
+
+  it('sets MAS as default model when mao-only flag is ON', async () => {
+    flagOverrides[MAO_ONLY_FLAG] = true;
+    mockHookResults.length = 0;
+    mockHookResults.push({
+      id: 'mas',
+      loading: false,
+      error: null,
+      hookResult: {
+        manager: {
+          model: 'Multi-Agent System',
+          stateManager: createStateManager(),
+          historyManagement: true,
+          streamMessages: true,
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useStateManager(true));
+    await actWait();
+
+    expect(result.current.currentModel).toBe('Multi-Agent System');
   });
 });

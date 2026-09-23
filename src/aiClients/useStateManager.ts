@@ -6,12 +6,22 @@ import { useFlag } from '@unleash/proxy-client-react';
 
 import { StateManagerConfiguration, UseManagerHook } from './types';
 import { useCurrentModel } from '../utils/VirtualAssistantStateSingleton';
-import { ARH_DEFAULT_FLAG } from './flags';
+import { ARH_DEFAULT_FLAG, MAO_ONLY_FLAG } from './flags';
 
 function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined {
   const { addHook, hookResults, cleanup } = useRemoteHookManager<UseManagerHook>();
   const arhDefaultFlag = useFlag(ARH_DEFAULT_FLAG);
+  const maoOnlyFlag = useFlag(MAO_ONLY_FLAG);
   useEffect(() => {
+    if (maoOnlyFlag) {
+      // MAO-only mode: register only the MAS chatbot, hiding the dropdown
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useMasChatbot',
+      });
+      return cleanup;
+    }
+
     if (arhDefaultFlag) {
       // ARH first in dropdown (current behavior)
       addHook({
@@ -46,7 +56,7 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
       module: './useMasChatbot',
     });
     return cleanup;
-  }, [addHook, arhDefaultFlag]);
+  }, [addHook, arhDefaultFlag, maoOnlyFlag]);
 
   return useMemo(() => {
     const passingResults = (hookResults || []).filter((r) => !r.error);
