@@ -35,12 +35,12 @@ spec:
       set -ex
       # Install npm dependencies (including Playwright)
       npm ci || {
-        install_status=$?
+        install_status=\$?
         # Distinguish workspace capacity exhaustion from inode exhaustion.
         df -h /var/workdir || true
         df -i /var/workdir || true
         du -sh /var/workdir/node_modules /var/workdir/.npm || true
-        exit "$install_status"
+        exit "\$install_status"
       }
       # Note: Playwright browsers are pre-installed in the playwright image
       # when image version matches package.json (both 1.60.0)
