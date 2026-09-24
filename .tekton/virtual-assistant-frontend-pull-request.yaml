@@ -105,7 +105,7 @@ spec:
     - name: url
       value: https://github.com/catastrophe-brandon/konflux-pipelines.git
     - name: revision
-      value: 6dd7133550df659d37720ace226b2282c88b5cb3
+      value: 65c7a9da190ef7a3e222b80b954e39bf3a0d2fce
     - name: pathInRepo
       value: pipelines/platform-ui/docker-build-run-all-tests-v2.yaml
     resolver: git
