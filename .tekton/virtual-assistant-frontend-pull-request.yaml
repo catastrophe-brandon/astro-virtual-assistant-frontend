@@ -96,9 +96,9 @@ spec:
   pipelineRef:
     params:
     - name: url
-      value: https://github.com/catastrophe-brandon/konflux-pipelines.git
+      value: https://github.com/RedHatInsights/konflux-pipelines
     - name: revision
-      value: 65c7a9da190ef7a3e222b80b954e39bf3a0d2fce
+      value: e0da8f2347fae1b5fd6a9113b2b5a3a3bbe4e584
     - name: pathInRepo
       value: pipelines/platform-ui/docker-build-run-all-tests-v2.yaml
     resolver: git
